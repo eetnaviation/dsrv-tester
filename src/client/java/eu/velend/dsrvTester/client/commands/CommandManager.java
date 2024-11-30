@@ -1,7 +1,6 @@
 package eu.velend.dsrvTester.client.commands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
@@ -12,6 +11,14 @@ public class CommandManager {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(
                     ClientCommandManager.literal("dsrv-test")
+                            .then(ClientCommandManager.literal("help")
+                                    .executes(context -> {
+                                        sendLocalMessage("dsrv-test, help:");
+                                        sendLocalMessage("/dsrv-test standard <all | everyone | here | uid | cid> [cid: Discord Channel ID] [uid: Discord User ID]");
+                                        sendLocalMessage("/dsrv-test bugs <emoji-parse>");
+                                        return 1;
+                                    })
+                            )
                             // Standard testing tools branch
                             .then(ClientCommandManager.literal("standard")
                                     .then(ClientCommandManager.literal("all") // Test all the things in standard branch
@@ -20,10 +27,10 @@ public class CommandManager {
                                                             .executes(context -> {
                                                                 String uid = StringArgumentType.getString(context, "uid");
                                                                 String cid = StringArgumentType.getString(context, "cid");
-                                                                sendMessageToChat("@everyone");           // Send all of the standard test messages
-                                                                sendMessageToChat("@here");
-                                                                sendMessageToChat("<@" + uid + ">");
-                                                                sendMessageToChat("<#" + cid + ">");
+                                                                sendGlobalMessage("@everyone");           // Send all the standard test messages
+                                                                sendGlobalMessage("@here");
+                                                                sendGlobalMessage("<@" + uid + ">");
+                                                                sendGlobalMessage("<#" + cid + ">");
                                                                 return 1;
                                                             })
                                                     )
@@ -31,13 +38,13 @@ public class CommandManager {
                                     )
                                     .then(ClientCommandManager.literal("everyone")                                   // Single standard test message commands
                                             .executes(context -> {
-                                                sendMessageToChat("@everyone");
+                                                sendGlobalMessage("@everyone");
                                                 return 1;
                                             })
                                     )
                                     .then(ClientCommandManager.literal("here")
                                             .executes(context -> {
-                                                sendMessageToChat("@here");
+                                                sendGlobalMessage("@here");
                                                 return 1;
                                             })
                                     )
@@ -45,7 +52,7 @@ public class CommandManager {
                                             .then(ClientCommandManager.argument("uid", StringArgumentType.word())
                                                     .executes(context -> {
                                                         String uid = StringArgumentType.getString(context, "uid");
-                                                        sendMessageToChat("<@" + uid + ">");
+                                                        sendGlobalMessage("<@" + uid + ">");
                                                         return 1;
                                                     })
                                             )
@@ -54,35 +61,36 @@ public class CommandManager {
                                             .then(ClientCommandManager.argument("cid", StringArgumentType.word())
                                                     .executes(context -> {
                                                         String cid = StringArgumentType.getString(context, "cid");
-                                                        sendMessageToChat("<#" + cid + ">");
+                                                        sendGlobalMessage("<#" + cid + ">");
                                                         return 1;
                                                     })
                                             )
                                     )
                             )
-                            // Bypass command branch
-                            .then(ClientCommandManager.literal("bypass")
-                                    .executes(context -> {
-                                        sendMessageToChat("Executing: /dsrv-test bypass");
-                                        return 1;
-                                    })
+                            // Bugs testing tools branch
+                            .then(ClientCommandManager.literal("bugs") // How could I add testing for DiscordSideCommandExecutionViaChatInjection?
+                                    .then(ClientCommandManager.literal("emoji-parse")
+                                            .executes(context -> {
+                                                sendGlobalMessage(":thumbsup: // :thumbs_up: // :fish: // :oncoming_automobile:");
+                                                return 1;
+                                            })
+                                    )
                             )
             );
         });
     }
 
-    // Logic for the "/hello [name]" command
-    private static int sendHelloMessage(CommandContext<?> context) {
-        String name = StringArgumentType.getString(context, "name");
-        sendMessageToChat("Hello, " + name + "!");
-        return 1;
+    // Utility method to send a message to the player's chat
+    private static void sendGlobalMessage(String message) {
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.literal("Hello, friend."));
+        }
     }
 
-    // Utility method to send a message to the player's chat
-    private static void sendMessageToChat(String message) {
+    private static void sendLocalMessage(String message) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null) {
-            client.player.sendMessage(Text.literal(message), false);
+            client.player.sendMessage(Text.literal(message), false); // false ensures it's not broadcasted to the server
         }
     }
 }
