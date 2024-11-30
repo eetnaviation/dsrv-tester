@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "dsrv-tester",
+  "version": "1.0",
+
+  "name": "dsrv-tester",
+  "description": "DiscordSRV Tester",
+  "authors": [],
+  "contact": {},
+
+  "license": "All-Rights-Reserved",
+  "icon": "assets/dsrv-tester/icon.png",
+
+  "environment": "client",
+  "entrypoints": {
+    "client": ["eu.velend.dsrvTester.client.DsrvTesterClient"],
+    "main": ["eu.velend.dsrvTester.DsrvTester"]
+  },
+
+
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "fabric": "*",
+    "minecraft": "1.20"
+  }
+}
