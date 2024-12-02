@@ -1,10 +1,15 @@
 package eu.velend.dsrvTester.client.commands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+
+import java.util.Objects;
 
 public class CommandManager {
     public static void registerCommands() {
@@ -82,8 +87,12 @@ public class CommandManager {
 
     // Utility method to send a message to the player's chat
     private static void sendGlobalMessage(String message) {
-        if (MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.sendMessage(Text.literal("Hello, friend."));
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        // Check if the player is present and the message is not empty
+        if (client.player != null && !message.isEmpty()) {
+            // Send the message to the server
+            Objects.requireNonNull(client.getNetworkHandler()).sendPacket(new ChatMessageC2SPacket(ConvertStringToPacketByteBuf(message)));
         }
     }
 
@@ -92,5 +101,12 @@ public class CommandManager {
         if (client.player != null) {
             client.player.sendMessage(Text.literal(message), false); // false ensures it's not broadcasted to the server
         }
+    }
+
+    public static PacketByteBuf ConvertStringToPacketByteBuf(String message) {
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer()); // Create a new PacketByteBuf backed by an Unpooled ByteBuf
+        buf.writeString(message); // Write the string to the PacketByteBuf
+
+        return buf;
     }
 }
