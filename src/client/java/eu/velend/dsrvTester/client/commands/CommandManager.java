@@ -85,28 +85,30 @@ public class CommandManager {
         });
     }
 
-    // Utility method to send a message to the player's chat
-    private static void sendGlobalMessage(String message) {
+    // Send a chat message to the server
+    public static void sendGlobalMessage(String message) {
         MinecraftClient client = MinecraftClient.getInstance();
 
-        // Check if the player is present and the message is not empty
-        if (client.player != null && !message.isEmpty()) {
+        // Ensure the player and network handler exist, and the message isn't empty
+        if (client.player != null && client.getNetworkHandler() != null && !message.isEmpty()) {
             // Send the message to the server
-            Objects.requireNonNull(client.getNetworkHandler()).sendPacket(new ChatMessageC2SPacket(ConvertStringToPacketByteBuf(message)));
+            client.getNetworkHandler().sendPacket(new ChatMessageC2SPacket(convertStringToPacketByteBuf(message)));
         }
     }
 
-    private static void sendLocalMessage(String message) {
+    // Send a local message to the player's client chat
+    public static void sendLocalMessage(String message) {
         MinecraftClient client = MinecraftClient.getInstance();
+
         if (client.player != null) {
-            client.player.sendMessage(Text.literal(message), false); // false ensures it's not broadcasted to the server
+            client.player.sendMessage(Text.literal(message), false); // false ensures it's only shown locally
         }
     }
 
-    public static PacketByteBuf ConvertStringToPacketByteBuf(String message) {
+    // Example method to use PacketByteBuf, although not needed for chat messages
+    public static PacketByteBuf convertStringToPacketByteBuf(String message) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer()); // Create a new PacketByteBuf backed by an Unpooled ByteBuf
         buf.writeString(message); // Write the string to the PacketByteBuf
-
         return buf;
     }
 }
