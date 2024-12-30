@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.impl.networking.NetworkHandlerExtensions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
@@ -87,12 +88,10 @@ public class CommandManager {
 
     // Send a chat message to the server
     public static void sendGlobalMessage(String message) {
-        MinecraftClient client = MinecraftClient.getInstance();
-
-        // Ensure the player and network handler exist, and the message isn't empty
-        if (client.player != null && client.getNetworkHandler() != null && !message.isEmpty()) {
-            // Send the message to the server
-            client.getNetworkHandler().sendPacket(new ChatMessageC2SPacket(convertStringToPacketByteBuf(message)));
+        try {
+            MinecraftClient.getInstance().player.networkHandler.sendChatCommand("say" + message);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
